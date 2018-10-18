@@ -3,8 +3,10 @@ var http = require('http');
 var https=require('https');
 var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
-var config = require('./config')
+var config = require('./lib/config');
 var fs = require('fs')
+var handlers = require('./lib/handlers')
+var helpers = require('./lib/helpers')
 
 // Instantiate the HTTP server
 var httpServer = http.createServer(function(req,res){
@@ -63,14 +65,14 @@ var unifiedServer = (req,res)=>{
 
     // Check the router for a matching path for a handler. If one is not found, use the notFound handler instead.
     var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
-
+    // console.log(chosenHandler)
     // Construct the data object to send to the handler
     var data = {
         'trimmedPath' : trimmedPath,
         'queryStringObject' : queryStringObject,
         'method' : method,
         'headers' : headers,
-        'payload' : buffer
+        'payload' : helpers.parseJsonToObject(buffer)
     };
 
     // Route the request to the handler specified in the router
@@ -98,20 +100,11 @@ var unifiedServer = (req,res)=>{
 }
 
 
-// Define all the handlers
-var handlers = {};
 
-// Sample handler
-handlers.sample = function(data,callback){
-    callback(406,{'name':'sample handler'});
-};
-
-// Not found handler
-handlers.notFound = function(data,callback){
-  callback(404);
-};
 
 // Define the request router
 var router = {
-  'sample' : handlers.sample
+  'ping' : handlers.ping,
+  'users' : handlers.users,
+  'tokens' : handlers.tokens
 };
